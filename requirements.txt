@@ -1,6 +1,12 @@
-pdfplumber
-transformers
-accelerate
-soundfile
-numpy
-torch
+# requirements.txt
+
+torch              # TTS 模型推理
+transformers       # Hugging Face pipeline
+accelerate         # 推理加速（可选，但推荐）
+numpy              # 数组处理
+soundfile          # 保存 WAV 文件
+pdfplumber         # PDF 表格读取
+typing-extensions  # 新版 Python 类型支持
+scipy              # 高级音频处理
+pandas             # 表格数据处理复杂情况
+torchaudio         # 替代 soundfile，更直接处理 tensor → wav

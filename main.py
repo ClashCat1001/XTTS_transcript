@@ -1,44 +1,35 @@
 import os
-import soundfile as sf
+from src.pdf_utils import extract_pdf_pages
+from src.audio_utils import pages_to_audio_ssml
 
-from src.pdf_parser import extract_first_column_by_page
-from src.text_processor import split_text
-from src.tts_engine import TTSEngine
-from src.audio_utils import concat_audio
+# -----------------------------
+# 配置参数
+# -----------------------------
+DATA_DIR = "data"
+OUTPUT_DIR = "output"
+REPEAT = 3
+SHORT_PAUSE_SEC = 0.3
+LONG_PAUSE_SEC = 1.5
 
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def main():
-    pdf_path = "data/input.pdf"
-    output_dir = "output"
+# -----------------------------
+# 批量处理 PDF
+# -----------------------------
+for file_name in os.listdir(DATA_DIR):
+    if file_name.lower().endswith(".pdf"):
+        pdf_path = os.path.join(DATA_DIR, file_name)
+        pdf_name = os.path.splitext(file_name)[0]
 
-    os.makedirs(output_dir, exist_ok=True)
+        print(f"📄 Processing PDF: {file_name}")
+        pages = extract_pdf_pages(pdf_path)
+        pages_to_audio_ssml(
+            pages,
+            pdf_name,
+            output_dir=OUTPUT_DIR,
+            repeat=REPEAT,
+            short_pause_sec=SHORT_PAUSE_SEC,
+            long_pause_sec=LONG_PAUSE_SEC
+        )
 
-    # 1. 解析PDF
-    pages_data = extract_first_column_by_page(pdf_path)
-
-    # 2. 初始化TTS
-    tts = TTSEngine()
-
-    # 3. 逐页处理
-    for i, words in enumerate(pages_data):
-        if not words:
-            continue
-
-        text = " ".join(words)
-        chunks = split_text(text)
-
-        audio_chunks = []
-
-        for chunk in chunks:
-            audio = tts.generate(chunk)
-            audio_chunks.append(audio)
-
-        final_audio = concat_audio(audio_chunks)
-
-        sf.write(f"{output_dir}/page_{i+1}.wav", final_audio, samplerate=24000)
-
-        print(f"Page {i+1} done")
-
-
-if __name__ == "__main__":
-    main()
+print("✅ All PDFs processed.")
