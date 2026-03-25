@@ -1,7 +1,8 @@
+# XTTS-v2 项目依赖
 torch
-transformers
-accelerate
-numpy
 soundfile
 pdfplumber
+numpy==1.22.0
+TTS==0.22.0
+transformers==4.57.6
 typing-extensions
