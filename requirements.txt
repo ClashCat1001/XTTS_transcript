@@ -1,4 +1,6 @@
-torch
+pdfplumber
+transformers
+accelerate
+soundfile
 numpy
-pandas
-matplotlib
+torch
