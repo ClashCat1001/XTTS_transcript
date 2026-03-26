@@ -1,21 +1,24 @@
-# src/pdf_utils.py
 import pdfplumber
+import pandas as pd
 
 def extract_pdf_pages(pdf_path):
-    """
-    提取 PDF 页面文本或表格第一列
-    返回列表，每页为一个单词/词组列表
-    """
-    pages_words = []
+    """提取 PDF 每页文本"""
+    pages = []
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
-            # 尝试提取表格
-            table = page.extract_table()
-            if table:
-                first_col = [row[0] for row in table if row[0]]
-                pages_words.append(first_col)
-            else:
-                text = page.extract_text()
-                if text:
-                    pages_words.append(text.split())
-    return pages_words
+            text = page.extract_text()
+            if text:
+                pages.append(text)
+    return pages
+
+def extract_table_first_column(pdf_path):
+    """提取 PDF 所有表格的第一列（通常为单词/词组）"""
+    first_col_list = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                for row in table:
+                    if row and row[0]:
+                        first_col_list.append(row[0])
+    return first_col_list

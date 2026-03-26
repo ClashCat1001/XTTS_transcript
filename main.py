@@ -1,7 +1,6 @@
-# main.py
 import os
-from src.pdf_utils import extract_pdf_pages
-from src.audio_utils import pages_to_audio_xtts
+import json
+from src.pdf_utils import extract_pdf_pages, extract_table_first_column
 
 def safe_input(prompt, default):
     value = input(prompt)
@@ -23,13 +22,25 @@ if __name__ == "__main__":
     pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
 
     print("📖 正在解析 PDF...")
-    pages_words = extract_pdf_pages(pdf_path)
+    # 提取分页文本或表格第一列
+    pages = extract_pdf_pages(pdf_path)
+    table_words = extract_table_first_column(pdf_path)
+    if table_words:
+        print(f"📊 表格第一列提取到 {len(table_words)} 个单词/词组")
+        pages.append(" ".join(table_words))  # 可合并到最后一页或另起一页
 
-    pages_to_audio_xtts(
-        pages_words,
-        pdf_name,
-        repeat=repeat,
-        short_pause_sec=short_pause,
-        long_pause_sec=long_pause
-    )
-    print("🎉 全部完成！")
+    # 保存 JSON
+    with open(f"{pdf_name}_pages.json", "w", encoding="utf-8") as f:
+        json.dump(pages, f, ensure_ascii=False, indent=2)
+
+    params = {
+        "repeat": repeat,
+        "short_pause": short_pause,
+        "long_pause": long_pause,
+        "pdf_name": pdf_name
+    }
+    with open(f"{pdf_name}_params.json", "w", encoding="utf-8") as f:
+        json.dump(params, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ PDF 分析完成，生成 {pdf_name}_pages.json 和 {pdf_name}_params.json")
+    print("💡 请确保 speaker.wav 在当前目录，并 push 这三个文件到 GitHub 供 Colab 使用")
