@@ -1,12 +1,11 @@
-import os
-import numpy as np
-import soundfile as sf
 from TTS.api import TTS
+import os
+import soundfile as sf
+import numpy as np
 
 XTTS_MODEL = "tts_models/multilingual/multi-dataset/xtts_v2"
 
 _tts = None
-
 
 def get_tts():
     global _tts
@@ -27,41 +26,34 @@ def pages_to_audio_xtts(
 ):
     tts = get_tts()
 
-    # 清理文件名
-    pdf_name = pdf_name.replace(" ", "_")
+    pdf_folder = os.path.join(output_dir, pdf_name)
+    os.makedirs(pdf_folder, exist_ok=True)
 
-    pdf_output_dir = os.path.join(output_dir, pdf_name)
-    os.makedirs(pdf_output_dir, exist_ok=True)
+    sample_rate = 22050
+    short_pause = np.zeros(int(sample_rate * short_pause_sec))
+    long_pause = np.zeros(int(sample_rate * long_pause_sec))
 
-    sr = tts.synthesizer.output_sample_rate
+    for i, page in enumerate(pages, start=1):
+        print(f"📄 正在处理第 {i} 页...")
 
-    short_pause = np.zeros(int(short_pause_sec * sr))
-    long_pause = np.zeros(int(long_pause_sec * sr))
-
-    for idx, page in enumerate(pages, start=1):
-        if not page:
-            continue
-
+        words = page.split()
         audio_segments = []
 
-        for word in page:
-            for r in range(repeat):
-                wav = tts.tts(text=word, speaker=None, language=language)
-                audio_segments.append(wav)
+        for word in words:
+            for _ in range(repeat):
+                wav = tts.tts(
+                    text=word,
+                    speaker_wav="speaker.wav",   # ✅ 使用你的 BBC 声音
+                    language=language
+                )
+                audio_segments.append(np.array(wav))
+                audio_segments.append(short_pause)
 
-                # 🔹 短间隔（重复之间）
-                if r < repeat - 1:
-                    audio_segments.append(short_pause)
-
-            # 🔸 长间隔（单词之间）
             audio_segments.append(long_pause)
 
-        if not audio_segments:
-            continue
+        final_audio = np.concatenate(audio_segments)
 
-        full_audio = np.concatenate(audio_segments)
+        output_path = os.path.join(pdf_folder, f"p{i}.wav")
+        sf.write(output_path, final_audio, sample_rate)
 
-        out_path = os.path.join(pdf_output_dir, f"p{idx}.wav")
-
-        sf.write(out_path, full_audio, sr)
-        print(f"✅ 生成: {out_path}")
+        print(f"✅ 已生成: {output_path}")
