@@ -1,7 +1,7 @@
+# main.py
 import os
 from src.pdf_utils import extract_pdf_pages
 from src.audio_utils import pages_to_audio_xtts
-
 
 def safe_input(prompt, default):
     value = input(prompt)
@@ -11,11 +11,8 @@ def safe_input(prompt, default):
         print("⚠️ 输入无效，使用默认值")
         return default
 
-
 if __name__ == "__main__":
-    print("📄 输入 PDF 文件名（例如 example.pdf）:")
-    pdf_path = input().strip()
-
+    pdf_path = input("📄 输入 PDF 文件名（例如 example.pdf）: ").strip()
     if not os.path.exists(pdf_path):
         raise FileNotFoundError("❌ PDF 文件不存在")
 
@@ -26,14 +23,13 @@ if __name__ == "__main__":
     pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
 
     print("📖 正在解析 PDF...")
-    pages = extract_pdf_pages(pdf_path)
+    pages_words = extract_pdf_pages(pdf_path)
 
     pages_to_audio_xtts(
-        pages,
+        pages_words,
         pdf_name,
         repeat=repeat,
         short_pause_sec=short_pause,
         long_pause_sec=long_pause
     )
-
     print("🎉 全部完成！")
